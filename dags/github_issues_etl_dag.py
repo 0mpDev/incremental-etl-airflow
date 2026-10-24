@@ -63,6 +63,8 @@ with DAG(
         gh = BaseHook.get_connection("github_conn")
         client = Github(auth=Auth.Token(gh.password))
         df = extract_all_issue_events_for_user(client, watermark)
+        if not df.empty:
+            df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True).dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         return df.to_dict(orient="list")
 
     @task(outlets=[ISSUES_DS])    # Load Idempotent database insert (ON CONFLICT)

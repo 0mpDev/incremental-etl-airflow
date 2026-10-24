@@ -93,14 +93,15 @@ def extract_all_issue_events_for_user(github_client,  since_ts: Optional[datetim
 
     for repo in tqdm(repos, desc="Processing repositories"):
         try:
-            issues = repo.get_issues(
-                state="all",
-                since=since_ts  # 🔥 incremental
-            )
+            kwargs = {"state": "all"}
+            if since_ts is not None:      # only pass 'since' when we have a watermark
+                kwargs["since"] = since_ts
+            issues = repo.get_issues(**kwargs)
         except Exception as e:
-            print(f"ERROR retrieving {repo.full_name}: {e}")
-            continue
+            print(f"ERROR retrieving {repo.full_name}: {repr(e)}")
+            continue      
 
+    
         for issue in issues:
             df_issue = flatten_issue_clean(issue)
             if df_issue.empty:
@@ -110,8 +111,8 @@ def extract_all_issue_events_for_user(github_client,  since_ts: Optional[datetim
             df_issue["owner"] = user.login
             all_rows.append(df_issue)
 
-    return pd.concat(all_rows, ignore_index=True) if all_rows else pd.DataFrame()
+    # runs once, after all repos have been processed
+    if not all_rows and since_ts is None:
+        raise RuntimeError("Initial extraction returned 0 rows - check GitHub access/config")
 
-
-
-
+    return pd.concat(all_rows, ignore_index=True) if all_rows else pd.DataFrame()       

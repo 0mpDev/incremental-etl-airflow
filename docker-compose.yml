@@ -65,6 +65,7 @@ services:
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__WEBSERVER__SECRET_KEY: airflow_super_secret_key_123
+      AIRFLOW__WEBSERVER__WORKERS: 1
       PYTHONPATH: /opt/airflow
       _PIP_ADDITIONAL_REQUIREMENTS: -r /opt/airflow/requirements.txt
     volumes:
